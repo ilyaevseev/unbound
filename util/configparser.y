@@ -155,6 +155,7 @@ extern struct config_parser_state* cfg_parser;
 %token VAR_UDP_UPSTREAM_WITHOUT_DOWNSTREAM VAR_FOR_UPSTREAM
 %token VAR_AUTH_ZONE VAR_ZONEFILE VAR_MASTER VAR_URL VAR_FOR_DOWNSTREAM
 %token VAR_FALLBACK_ENABLED
+%token VAR_FORWARD_PREFERENCE
 
 %%
 toplevelvars: /* empty */ | toplevelvars toplevelvar ;
@@ -2027,6 +2028,21 @@ forward_first: VAR_FORWARD_FIRST STRING_ARG
 		if(strcmp($2, "yes") != 0 && strcmp($2, "no") != 0)
 			yyerror("expected yes or no.");
 		else cfg_parser->cfg->forwards->isfirst=(strcmp($2, "yes")==0);
+		free($2);
+	}
+	;
+forward_preference: VAR_FORWARD_PREFERENCE STRING_ARG
+	{
+		OUTYY(("P(forward-preference:%s)\n", $2));
+		if (strcmp($2, "only") == 0) {
+			cfg_parser->cfg->forwards->preference = FORWARD_ONLY;
+		} else if (strcmp($2, "preferred") == 0) {
+			cfg_parser->cfg->forwards->preference = FORWARD_PREFERRED;
+		} else if (strcmp($2, "backup") == 0) {
+			cfg_parser->cfg->forwards->preference = FORWARD_BACKUP;
+		} else {
+			yyerror("expected only, preferred or backup.");
+		}
 		free($2);
 	}
 	;
